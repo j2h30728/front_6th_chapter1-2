@@ -1,45 +1,53 @@
 export function createElement(vNode) {
-  if (vNode === undefined || vNode === null || vNode === false || vNode === true) {
+  if (vNode == null || typeof vNode === "boolean") {
     return document.createTextNode("");
   }
 
   if (typeof vNode === "number" || typeof vNode === "string") {
-    return document.createTextNode(vNode);
+    return document.createTextNode(String(vNode));
   }
 
   if (Array.isArray(vNode)) {
-    const fragment = document.createDocumentFragment();
-    vNode.forEach((node) => {
-      const element = document.createElement(node.type);
-      if (node.props) {
-        updateAttributes(element, node.props);
-      }
-      fragment.appendChild(element);
-    });
-    return fragment;
+    return createFragment(vNode);
   }
 
   if (typeof vNode.type === "function") {
-    throw new Error("컴포넌트는 직접 사용할 수 없습니다.");
+    throw new Error("컴포넌트는 직접 createElement로 사용할 수 없습니다.");
   }
 
-  if (Array.isArray(vNode.children) && vNode.children.length > 0) {
-    const element = document.createElement(vNode.type);
-    vNode.children.forEach((child) => {
-      const childElement = createElement(child);
-      if (child.props) {
-        updateAttributes(childElement, child.props);
-      }
-      element.appendChild(childElement);
-    });
-    return element;
-  }
+  return createDOMElement(vNode);
+}
 
+function createFragment(vNode) {
+  const fragment = document.createDocumentFragment();
+  vNode.forEach((node) => {
+    fragment.appendChild(createElement(node));
+  });
+  return fragment;
+}
+
+function createDOMElement(vNode) {
   const element = document.createElement(vNode.type);
+
   if (vNode.props) {
     updateAttributes(element, vNode.props);
   }
+
+  if (hasChildren(vNode)) {
+    appendChildren(element, vNode.children);
+  }
+
   return element;
+}
+
+function hasChildren(vNode) {
+  return Array.isArray(vNode.children) && vNode.children.length > 0;
+}
+
+function appendChildren(parentElement, children) {
+  children.forEach((child) => {
+    parentElement.appendChild(createElement(child));
+  });
 }
 
 function updateAttributes($el, props) {
