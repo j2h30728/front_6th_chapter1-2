@@ -1,3 +1,5 @@
+import { addEvent } from "./eventManager";
+
 export function createElement(vNode) {
   if (vNode == null || typeof vNode === "boolean") {
     return document.createTextNode("");
@@ -29,6 +31,8 @@ function createFragment(vNode) {
 function createDOMElement(vNode) {
   const element = document.createElement(vNode.type);
 
+  vNode.el = element;
+
   if (vNode.props) {
     updateAttributes(element, vNode.props);
   }
@@ -46,12 +50,22 @@ function hasChildren(vNode) {
 
 function appendChildren(parentElement, children) {
   children.forEach((child) => {
-    parentElement.appendChild(createElement(child));
+    const childElement = createElement(child);
+    if (typeof child === "object" && child !== null && !Array.isArray(child)) {
+      child.el = childElement;
+    }
+    parentElement.appendChild(childElement);
   });
 }
 
 function updateAttributes($el, props) {
   Object.entries(props).forEach(([key, value]) => {
+    if (key.startsWith("on") && typeof value === "function") {
+      const eventType = key.slice(2).toLowerCase();
+      addEvent($el, eventType, value);
+      return;
+    }
+
     if (key === "className") {
       $el.setAttribute("class", value);
       return;
@@ -60,6 +74,12 @@ function updateAttributes($el, props) {
     if (key === "children") {
       return;
     }
+
+    if (key === "style") {
+      Object.assign($el.style, value);
+      return;
+    }
+
     $el.setAttribute(key, value);
   });
 }
