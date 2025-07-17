@@ -32,7 +32,6 @@ function createDOMElement(vNode) {
   const element = document.createElement(vNode.type);
 
   vNode.el = element;
-
   if (vNode.props) {
     updateAttributes(element, vNode.props);
   }
@@ -77,6 +76,18 @@ function updateAttributes($el, props) {
 
     if (key === "style") {
       Object.assign($el.style, value);
+      return;
+    }
+
+    if (["checked", "disabled", "selected", "readOnly"].includes(key)) {
+      const attrName = key.toLowerCase();
+      if (value === true) {
+        $el[key] = true;
+        $el.setAttribute(attrName, "");
+      } else {
+        $el[key] = false;
+        $el.removeAttribute(attrName);
+      }
       return;
     }
 

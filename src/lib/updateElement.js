@@ -58,7 +58,7 @@ function updateAttributes(target, originNewProps, originOldProps) {
         const attrName = key === "readOnly" ? "readonly" : key;
         if (newProps[key] === true) {
           target[key] = true;
-          if (key === "disabled") {
+          if (key === "disabled" || key === "readOnly") {
             target.setAttribute(attrName, "");
           } else {
             target.removeAttribute(attrName);
@@ -85,6 +85,14 @@ function updateAttributes(target, originNewProps, originOldProps) {
   });
 }
 
+/**
+ *
+ * @param {*} parentElement
+ * @param {*} newNode
+ * @param {*} oldNode
+ * @param {*} index
+ * @returns
+ */
 export function updateElement(parentElement, newNode, oldNode, index = 0) {
   if (!newNode && oldNode) {
     const oldElement = parentElement.children[index];
@@ -105,17 +113,8 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
     (typeof oldNode === "number" && typeof newNode === "number")
   ) {
     if (oldNode !== newNode) {
-      const oldTextNode = parentElement.childNodes[index];
-      if (oldTextNode && oldTextNode.nodeType === Node.TEXT_NODE) {
-        oldTextNode.textContent = String(newNode);
-      } else {
-        const newTextNode = document.createTextNode(String(newNode));
-        if (oldTextNode) {
-          parentElement.replaceChild(newTextNode, oldTextNode);
-        } else {
-          parentElement.appendChild(newTextNode);
-        }
-      }
+      // 텍스트 노드의 경우, 부모 요소의 textContent를 직접 설정
+      parentElement.textContent = String(newNode);
     }
     return;
   }
@@ -133,6 +132,7 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
 
   const newChildren = newNode.children || [];
   const oldChildren = oldNode.children || [];
+  // console.log(newChildren, oldChildren);
 
   for (let i = 0; i < Math.min(newChildren.length, oldChildren.length); i++) {
     updateElement(oldNode.el, newChildren[i], oldChildren[i], i);
