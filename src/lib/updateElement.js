@@ -95,7 +95,7 @@ function updateAttributes(target, originNewProps, originOldProps) {
  */
 export function updateElement(parentElement, newNode, oldNode, index = 0) {
   if (!newNode && oldNode) {
-    const oldElement = parentElement.children[index];
+    const oldElement = parentElement.childNodes[index];
     if (oldElement) {
       parentElement.removeChild(oldElement);
     }
@@ -108,43 +108,51 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
     return;
   }
 
-  if (
-    (typeof oldNode === "string" && typeof newNode === "string") ||
-    (typeof oldNode === "number" && typeof newNode === "number")
-  ) {
+  if (typeof newNode === "string" || typeof newNode === "number") {
     if (oldNode !== newNode) {
-      parentElement.textContent = String(newNode);
+      const newTextNode = document.createTextNode(String(newNode));
+      const currentNode = parentElement.childNodes[index];
+
+      if (currentNode) {
+        parentElement.replaceChild(newTextNode, currentNode);
+      } else {
+        parentElement.appendChild(newTextNode);
+      }
     }
     return;
   }
 
   if (newNode.type !== oldNode.type) {
     const newElement = createElement(newNode);
-    const oldElement = parentElement.children[index];
+    const oldElement = parentElement.childNodes[index];
     if (oldElement) {
       parentElement.replaceChild(newElement, oldElement);
     }
     return;
   }
 
-  updateAttributes(oldNode.el, newNode.props, oldNode.props);
+  const currentElement = parentElement.childNodes[index];
+  if (!currentElement) return;
+
+  updateAttributes(currentElement, newNode.props, oldNode.props);
 
   const newChildren = newNode.children || [];
   const oldChildren = oldNode.children || [];
 
   for (let i = 0; i < Math.min(newChildren.length, oldChildren.length); i++) {
-    updateElement(oldNode.el, newChildren[i], oldChildren[i], i);
+    updateElement(currentElement, newChildren[i], oldChildren[i], i);
   }
 
   for (let i = oldChildren.length; i < newChildren.length; i++) {
-    updateElement(oldNode.el, newChildren[i], null, i);
+    updateElement(currentElement, newChildren[i], null, i);
   }
 
-  for (let i = oldChildren.length - 1; i >= newChildren.length; i--) {
-    updateElement(oldNode.el, null, oldChildren[i], i);
-  }
+  const childrenToRemove = oldChildren.length - newChildren.length;
 
-  if (typeof newNode === "object" && newNode !== null && !Array.isArray(newNode)) {
-    newNode.el = oldNode.el;
+  for (let i = 0; i < childrenToRemove; i++) {
+    const lastChild = currentElement.lastChild;
+    if (lastChild) {
+      currentElement.removeChild(lastChild);
+    }
   }
 }

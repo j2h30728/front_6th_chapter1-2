@@ -31,7 +31,6 @@ function createFragment(vNode) {
 function createDOMElement(vNode) {
   const element = document.createElement(vNode.type);
 
-  vNode.el = element;
   if (vNode.props) {
     updateAttributes(element, vNode.props);
   }
@@ -50,9 +49,6 @@ function hasChildren(vNode) {
 function appendChildren(parentElement, children) {
   children.forEach((child) => {
     const childElement = createElement(child);
-    if (typeof child === "object" && child !== null && !Array.isArray(child)) {
-      child.el = childElement;
-    }
     parentElement.appendChild(childElement);
   });
 }
@@ -80,10 +76,14 @@ function updateAttributes($el, props) {
     }
 
     if (["checked", "disabled", "selected", "readOnly"].includes(key)) {
-      const attrName = key.toLowerCase();
+      const attrName = key === "readOnly" ? "readonly" : key;
       if (value === true) {
         $el[key] = true;
-        $el.setAttribute(attrName, "");
+        if (key === "disabled" || key === "readOnly") {
+          $el.setAttribute(attrName, "");
+        } else {
+          $el.removeAttribute(attrName);
+        }
       } else {
         $el[key] = false;
         $el.removeAttribute(attrName);

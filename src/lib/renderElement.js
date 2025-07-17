@@ -1,4 +1,4 @@
-import { removeEvent, setupEventListeners } from "./eventManager";
+import { setupEventListeners } from "./eventManager";
 import { createElement } from "./createElement";
 import { normalizeVNode } from "./normalizeVNode";
 import { updateElement } from "./updateElement";
@@ -14,7 +14,6 @@ export function renderElement(vNode, container) {
     container.appendChild(element);
     setupEventListeners(container);
   } else {
-    removeEvent(container, prevVNode);
     updateElement(container, normalizedVNode, prevVNode, 0);
   }
   containerVNodeMap.set(container, normalizedVNode);
